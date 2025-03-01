@@ -1,4 +1,4 @@
-# Golang Cheatsheet
+# My Personal Golang Cheatsheet
 
 ## Basic Types
 
@@ -6,7 +6,7 @@
 
 |Type|Size|Range|
 |---|---|---|
-|int|Depends on Platform: 32 bits in 32 bit systems and 64 in 64 bit systems|-2147483648 to 2147483647 in 32 bit systems and <br>-9223372036854775808 to 9223372036854775807 in 64 bit systems|
+|int|Depends on Platform: 32 bits in 32 bit systems and 64 in 64 bit systems|-2147483648 to 2147483647 in 32 bit systems and -9223372036854775808 to 9223372036854775807 in 64 bit systems|
 |int8|8 bits/1 byte|-128 to 127|
 |int16|16 bits/2 byte|-32768 to 32767|
 |int32|32 bits/4 byte|-2147483648 to 2147483647|
@@ -41,6 +41,408 @@
 |byte|Alias for uint8|0|
 |rune|Alias for int32 (Unicode code point)|0|
 |error|Interface type for error handling|nil|
+
+## String Operations
+
+```go
+// String concatenation
+str1 := "Hello"
+str2 := "World"
+result := str1 + " " + str2
+
+// String length
+length := len(str1)  // 5
+
+// Accessing characters (returns byte/uint8)
+firstChar := str1[0]  // 'H' (72 in ASCII)
+
+// Slicing strings
+substring := str1[1:3]  // "el"
+
+// Converting to runes (for Unicode handling)
+runes := []rune(str1)
+for i, r := range runes {
+    fmt.Printf("Position %d: %c (Unicode: %U)\n", i, r, r)
+}
+
+// String comparison
+equal := str1 == "Hello"  // true
+notEqual := str1 != str2  // true
+lessThan := str1 < str2   // true ('H' < 'W' in ASCII)
+
+// String formatting
+formatted := fmt.Sprintf("Hello, %s! You are %d years old.", "John", 30)
+
+// String conversion
+num := 123
+strNum := strconv.Itoa(num)  // "123"
+backToNum, _ := strconv.Atoi(strNum)  // 123
+
+// Multiline strings
+multiline := `This is a
+multiline
+string`
+
+// String Builder (efficient for multiple concatenations)
+var builder strings.Builder
+builder.WriteString("Hello")
+builder.WriteString(", ")
+builder.WriteString("World")
+result := builder.String()  // "Hello, World"
+
+// Check if string contains substring
+contains := strings.Contains(str1, "ell")  // true
+
+// Replace in string
+replaced := strings.Replace(str1, "e", "E", 1)  // "HEllo"
+
+// Split string
+parts := strings.Split("a,b,c", ",")  // ["a", "b", "c"]
+
+// Join strings
+joined := strings.Join([]string{"a", "b", "c"}, "-")  // "a-b-c"
+
+// Trim spaces
+trimmed := strings.TrimSpace(" hello ")  // "hello"
+
+// Convert case
+upper := strings.ToUpper(str1)  // "HELLO"
+lower := strings.ToLower(str1)  // "hello"
+```
+
+## Pointers
+
+```go
+// Declare a pointer
+var p *int
+
+// Initialize a pointer
+i := 42
+p = &i  // p holds the memory address of i
+
+// Dereferencing a pointer
+value := *p  // value = 42
+
+// Update value through pointer
+*p = 21  // i is now 21
+
+// Create a pointer with new
+p := new(int)  // Creates a pointer to a zero-valued int
+*p = 42
+
+// Pointer to struct
+type Person struct {
+    Name string
+    Age  int
+}
+
+person := Person{"John", 30}
+pointer := &person
+pointer.Name = "Jane"  // Shorthand for (*pointer).Name = "Jane"
+
+// Function with pointer argument
+func updateAge(p *Person, newAge int) {
+    p.Age = newAge
+}
+updateAge(&person, 31)  // person.Age is now 31
+
+// Return a pointer from a function
+func createPerson(name string, age int) *Person {
+    return &Person{name, age}
+}
+p := createPerson("John", 30)
+
+// Pointer to array
+arr := [3]int{1, 2, 3}
+arrPtr := &arr
+(*arrPtr)[0] = 10  // arr[0] is now 10
+// Shorthand
+arrPtr[0] = 20     // arr[0] is now 20
+
+// Pointer to slice
+// Note: Slices already contain a pointer to the underlying array
+slice := []int{1, 2, 3}
+slicePtr := &slice
+// To change the slice itself (not its contents)
+*slicePtr = append(*slicePtr, 4)
+
+// Pointer to map
+// Note: Maps are already reference types
+m := map[string]int{"a": 1}
+mapPtr := &m
+(*mapPtr)["b"] = 2  // m["b"] is now 2
+```
+
+## Function Types
+
+```go
+// Function type declaration
+type MathFunc func(int, int) int
+
+// Function that takes a function as parameter
+func applyMath(a, b int, fn MathFunc) int {
+    return fn(a, b)
+}
+
+// Anonymous function as variable
+add := func(a, b int) int {
+    return a + b
+}
+result := add(5, 3)  // 8
+
+// Pass anonymous function as argument
+result := applyMath(5, 3, func(a, b int) int {
+    return a + b
+})
+
+// Function with multiple return values
+func divMod(a, b int) (int, int) {
+    return a / b, a % b
+}
+quotient, remainder := divMod(10, 3)  // 3, 1
+
+// Named return values
+func rectangle(width, height float64) (area, perimeter float64) {
+    area = width * height
+    perimeter = 2 * (width + height)
+    return  // "naked" return uses named return values
+}
+
+// Variadic functions
+func sum(nums ...int) int {
+    total := 0
+    for _, num := range nums {
+        total += num
+    }
+    return total
+}
+total := sum(1, 2, 3, 4)  // 10
+
+// Passing slice to variadic function
+numbers := []int{1, 2, 3, 4}
+total := sum(numbers...)  // Spread operator
+
+// Closures
+func adder() func(int) int {
+    sum := 0
+    return func(x int) int {
+        sum += x
+        return sum
+    }
+}
+counter := adder()
+fmt.Println(counter(1))  // 1
+fmt.Println(counter(2))  // 3
+fmt.Println(counter(3))  // 6
+
+// Defer function calls
+func example() {
+    defer fmt.Println("This runs last")
+    fmt.Println("This runs first")
+}
+
+// Multiple defers (LIFO order)
+func example() {
+    defer fmt.Println("This runs third")
+    defer fmt.Println("This runs second")
+    fmt.Println("This runs first")
+}
+```
+
+## Custom Types
+
+```go
+// Type definitions
+type Celsius float64
+type Fahrenheit float64
+
+// Methods on custom types
+func (c Celsius) ToFahrenheit() Fahrenheit {
+    return Fahrenheit(c*9/5 + 32)
+}
+
+func (f Fahrenheit) ToCelsius() Celsius {
+    return Celsius((f - 32) * 5 / 9)
+}
+
+// Usage
+var temp Celsius = 20
+fmt.Println(temp.ToFahrenheit())  // 68
+
+// Type aliases
+type MyInt = int  // Alias (not a new type)
+
+// Type conversions
+var num int = 5
+var float float64 = float64(num)
+
+// Type definitions vs aliases
+type Counter int      // New type, needs explicit conversion from int
+type AltCounter = int // Alias, interchangeable with int
+
+var c Counter = 5
+// var c Counter = int(5)  // Doesn't work, need explicit conversion
+var a AltCounter = 5  // Works directly, AltCounter is just an alias
+```
+
+## Time and Date
+
+```go
+// Current time
+now := time.Now()
+
+// Create a specific time
+t := time.Date(2022, time.January, 1, 12, 0, 0, 0, time.UTC)
+
+// Format time
+formatted := t.Format("2006-01-02 15:04:05")
+formatted := t.Format(time.RFC3339)
+
+// Common format constants
+time.RFC3339       // "2006-01-02T15:04:05Z07:00"
+time.RFC1123       // "Mon, 02 Jan 2006 15:04:05 MST"
+time.DateOnly      // "2006-01-02" (Go 1.20+)
+time.TimeOnly      // "15:04:05" (Go 1.20+)
+
+// Parse time
+t, err := time.Parse("2006-01-02", "2022-01-01")
+t, err := time.Parse(time.RFC3339, "2022-01-01T12:00:00Z")
+
+// Time components
+year, month, day := t.Date()
+hour, min, sec := t.Clock()
+
+// Duration
+duration := 5 * time.Second
+duration := 2*time.Hour + 30*time.Minute
+duration := 5 * 24 * time.Hour // 5 days
+
+// Add/subtract time
+newTime := t.Add(2 * time.Hour)
+pastTime := t.Add(-3 * time.Hour)
+tomorrow := t.AddDate(0, 0, 1) // Add 1 day
+
+// Difference between times
+duration := t2.Sub(t1)
+seconds := duration.Seconds()
+minutes := duration.Minutes()
+hours := duration.Hours()
+
+// Compare times
+before := t1.Before(t2)
+after := t1.After(t2)
+equal := t1.Equal(t2)
+
+// Time zones
+loc, err := time.LoadLocation("America/New_York")
+t := time.Date(2022, time.January, 1, 12, 0, 0, 0, loc)
+
+// Convert to UTC
+utcTime := t.UTC()
+
+// Sleep
+time.Sleep(2 * time.Second)
+
+// Timers
+timer := time.NewTimer(2 * time.Second)
+<-timer.C // Wait for timer to expire
+timer.Stop() // Stop timer
+
+// Tickers
+ticker := time.NewTicker(1 * time.Second)
+defer ticker.Stop()
+
+for {
+    select {
+    case <-ticker.C:
+        fmt.Println("Tick at", time.Now())
+    case <-done:
+        return
+    }
+}
+```
+
+## JSON
+
+```go
+// Define struct for JSON
+type Person struct {
+    Name    string `json:"name"`
+    Age     int    `json:"age"`
+    Address string `json:"address,omitempty"` // omit if empty
+}
+
+// Marshal (struct to JSON)
+p := Person{Name: "John", Age: 30}
+data, err := json.Marshal(p)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(string(data)) // {"name":"John","age":30}
+
+// Pretty printing
+data, err := json.MarshalIndent(p, "", "  ")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(string(data))
+
+// Unmarshal (JSON to struct)
+jsonData := []byte(`{"name":"Alice","age":25,"address":"123 Main St"}`)
+var p Person
+err := json.Unmarshal(jsonData, &p)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(p.Name, p.Age, p.Address)
+
+// Working with dynamic JSON
+var data map[string]interface{}
+err := json.Unmarshal(jsonData, &data)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(data["name"])
+
+// JSON number handling
+var result struct {
+    Value json.Number `json:"value"`
+}
+err := json.Unmarshal([]byte(`{"value": 12345}`), &result)
+intVal, _ := result.Value.Int64()
+floatVal, _ := result.Value.Float64()
+
+// Custom JSON marshaling
+type Date struct {
+    time.Time
+}
+
+func (d Date) MarshalJSON() ([]byte, error) {
+    return json.Marshal(d.Format("2006-01-02"))
+}
+
+func (d *Date) UnmarshalJSON(b []byte) error {
+    var s string
+    if err := json.Unmarshal(b, &s); err != nil {
+        return err
+    }
+    t, err := time.Parse("2006-01-02", s)
+    if err != nil {
+        return err
+    }
+    d.Time = t
+    return nil
+}
+
+// JSON streams
+enc := json.NewEncoder(os.Stdout)
+enc.SetIndent("", "  ")
+enc.Encode(data)
+
+dec := json.NewDecoder(resp.Body)
+var result Person
+dec.Decode(&result)
+```
 
 ## Variables and Constants
 
